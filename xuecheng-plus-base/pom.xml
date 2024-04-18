@@ -10,6 +10,7 @@
         <!--基于当前pom.xml找到父工程-->
         <relativePath>../xuecheng-plus-parent</relativePath>
     </parent>
+
     <artifactId>xuecheng-plus-base</artifactId>
     <dependencies>
         <dependency>
@@ -92,6 +93,9 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
+
+
     </dependencies>
+
 
 </project>
