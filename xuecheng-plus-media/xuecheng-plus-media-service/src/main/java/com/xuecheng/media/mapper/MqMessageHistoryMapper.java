@@ -2,6 +2,7 @@ package com.xuecheng.media.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.xuecheng.media.model.po.MqMessageHistory;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
@@ -10,6 +11,7 @@ import com.xuecheng.media.model.po.MqMessageHistory;
  *
  * @author itcast
  */
+
 public interface MqMessageHistoryMapper extends BaseMapper<MqMessageHistory> {
 
 }
