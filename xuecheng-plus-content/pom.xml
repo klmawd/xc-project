@@ -9,20 +9,12 @@
         <relativePath>../xuecheng-plus-parent</relativePath>
     </parent>
     <packaging>pom</packaging>
-    <dependencies>
-        <dependency>
-            <groupId>com.xuecheng</groupId>
-            <artifactId>xuecheng-plus-content-model</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
 
     <groupId>com.xuecheng</groupId>
     <artifactId>xuecheng-plus-content</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>xuecheng-plus-contxet</name>
-    <description>xuecheng-plus-contxet</description>
+    <name>xuecheng-plus-content</name>
+    <description>xuecheng-plus-content</description>
 
     <modules>
         <module>xuecheng-plus-content-api</module>

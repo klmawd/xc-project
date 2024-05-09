@@ -1,8 +1,10 @@
 package com.xuecheng.content.api;
 
+import com.xuecheng.content.model.dto.BindTeachplanMediaDto;
 import com.xuecheng.content.model.dto.SaveTeachplanDto;
 import com.xuecheng.content.model.dto.TeachplanDto;
 import com.xuecheng.content.service.TeachplanService;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -54,4 +56,7 @@ public class TeachplanController {
     public void teachplanMovedown(@PathVariable("teachplanId") Long teachplanId){
         teachplanService.teacheplanMovedown(teachplanId);
     }
+
+
+
 }

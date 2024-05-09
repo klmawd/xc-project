@@ -1,7 +1,10 @@
 package com.xuecheng.content.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xuecheng.content.model.dto.CoursePreviewDto;
 import com.xuecheng.content.model.po.CoursePublish;
+
+import java.io.File;
 
 /**
  * <p>
@@ -12,5 +15,10 @@ import com.xuecheng.content.model.po.CoursePublish;
  * @since 2024-04-11
  */
 public interface CoursePublishService extends IService<CoursePublish> {
+    CoursePreviewDto getCoursePreviewInfo(Long courseId);
+    void commitAudit(Long companyId, Long courseId);
+    void coursepublish(Long companyId, Long courserId);
+    File generateCourseHtml(Long courseId);
+    void uploadCourseHtml(Long courseId, File file);
 
 }

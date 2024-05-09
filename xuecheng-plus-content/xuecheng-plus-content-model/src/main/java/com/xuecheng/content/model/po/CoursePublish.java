@@ -114,7 +114,6 @@ public class CoursePublish implements Serializable {
     /**
      * 发布时间
      */
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createDate;
 
     /**

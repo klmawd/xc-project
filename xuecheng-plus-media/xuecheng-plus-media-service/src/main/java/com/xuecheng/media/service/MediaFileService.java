@@ -1,5 +1,6 @@
 package com.xuecheng.media.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.xuecheng.base.model.PageParams;
 import com.xuecheng.base.model.PageResult;
 import com.xuecheng.base.model.RestResponse;
@@ -16,7 +17,7 @@ import java.io.File;
  * @description 媒资文件管理业务类
  * @date 2022/9/10 8:55
  */
-public interface MediaFileService {
+public interface MediaFileService extends IService<MediaFiles> {
 
     /**
      * @param pageParams          分页参数
@@ -28,7 +29,7 @@ public interface MediaFileService {
      */
     PageResult<MediaFiles> queryMediaFiels(Long companyId, PageParams pageParams, QueryMediaParamsDto queryMediaParamsDto);
 
-    UploadFileResultDto uploadFile(Long companyId, UploadFileParamsDto uploadFileParamsDto, String localFilePath);
+    UploadFileResultDto uploadFile(Long companyId, UploadFileParamsDto uploadFileParamsDto, String localFilePath, String objectName);
 
     MediaFiles addMediaFilesToDb(Long companyId, String fileMd5, UploadFileParamsDto uploadFileParamsDto, String bucket, String objectName);
 
@@ -38,7 +39,7 @@ public interface MediaFileService {
 
     RestResponse uploadChunk(String fileMd5, int chunk, String localChunkFilePath);
 
-    RestResponse mergechunks(Long companyId,String fileMd5,int chunkTotal,UploadFileParamsDto uploadFileParamsDto);
+    RestResponse mergechunks(Long companyId, String fileMd5, int chunkTotal, UploadFileParamsDto uploadFileParamsDto);
 
     File downloadFileFromMinIO(String bucket, String objectName);
 
