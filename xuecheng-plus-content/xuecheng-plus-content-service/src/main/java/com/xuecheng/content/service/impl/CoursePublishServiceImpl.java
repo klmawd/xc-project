@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuecheng.base.ecxeption.XueChengPlusException;
 import com.xuecheng.content.config.MultipartSupportConfig;
 import com.xuecheng.content.feignclient.MediaServiceClient;
+import com.xuecheng.content.feignclient.SearchServiceClient;
 import com.xuecheng.content.mapper.CoursePublishMapper;
 import com.xuecheng.content.model.dto.CourseBaseDto;
 import com.xuecheng.content.model.dto.CoursePreviewDto;
@@ -65,6 +66,8 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
     private MqMessageService mqMessageService;
     @Autowired
     private MediaServiceClient mediaServiceClient;
+    @Autowired
+    private SearchServiceClient searchServiceClient;
 
     //课程预览
     @Override
@@ -181,12 +184,12 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
             coursePublishService.save(coursePublish);
         }
 
-        //删除course_publish_pre表数据
-        coursePublishPreService.removeById(courseId);
+//        //删除course_publish_pre表数据
+//        coursePublishPreService.removeById(courseId);
 
         //将course_base表中相关记录的发布状态改为已发布
         CourseBase courseBase = courseBaseService.getById(courseId);
-        courseBase.setAuditStatus("202002");
+        courseBase.setStatus("203002");
         courseBaseService.updateById(courseBase);
 
         //向mq_message表插入数据
@@ -254,5 +257,30 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
         if (course == null) {
             throw new XueChengPlusException("上传静态文件异常");
         }
+    }
+
+    //课程下架
+    @Override
+    @Transactional
+    public void courseoffline(Long companyId, Long courseId) {
+        CourseBase courseBase = courseBaseService.getById(courseId);
+        if (!companyId.equals(courseBase.getCompanyId())) {
+            throw new XueChengPlusException("不能下架其他机构的课程");
+        }
+
+        //修改course_base表为下架状态
+        courseBase.setStatus("203001");
+        courseBaseService.updateById(courseBase);
+
+        //删除课程发布表数据
+        coursePublishService.removeById(courseId);
+
+        //删除minio中静态页面
+        mediaServiceClient.fileRemove(courseId + ".html");
+
+        //删除es中索引信息
+        searchServiceClient.delete(courseId);
+
+
     }
 }

@@ -18,6 +18,11 @@ public class MediaServiceClientFallbackFactory implements FallbackFactory<MediaS
                 log.debug("调用媒资管理服务上传文件时发生熔断，异常信息:{}", throwable.toString(), throwable);
                 return null;
             }
+
+            @Override
+            public void fileRemove(String fileName) {
+                log.debug("调用媒资管理服务删除文件发送熔断，异常信息：{}", throwable.toString(), throwable);
+            }
         };
     }
 }

@@ -11,12 +11,8 @@ import com.xuecheng.content.model.dto.AddCourseDto;
 import com.xuecheng.content.model.dto.CourseBaseDto;
 import com.xuecheng.content.model.dto.QueryCourseParamsDto;
 import com.xuecheng.content.model.dto.UpdateCourseDto;
-import com.xuecheng.content.model.po.CourseBase;
-import com.xuecheng.content.model.po.CourseCategory;
-import com.xuecheng.content.model.po.CourseMarket;
-import com.xuecheng.content.service.CourseBaseService;
-import com.xuecheng.content.service.CourseCategoryService;
-import com.xuecheng.content.service.CourseMarketService;
+import com.xuecheng.content.model.po.*;
+import com.xuecheng.content.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -44,6 +40,14 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
 
     @Autowired
     private CourseCategoryService courseCategoryService;
+    @Autowired
+    private TeachplanService teachplanService;
+    @Autowired
+    private CourseTeacherService courseTeacherService;
+    @Autowired
+    private CoursePublishPreService coursePublishPreService;
+    @Autowired
+    private TeachplanMediaService teachplanMediaService;
 
     //分页查询课程信息
     @Override
@@ -184,5 +188,60 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
         }
 
         return getByIdCourseBaseDto(courseId);
+    }
+
+    //删除课程
+    @Override
+    @Transactional
+    public void deleteCourse(Long companyId, Long courseId) {
+
+        //只能删除本机构的课程
+        CourseBase courseBase = this.getById(courseId);
+        if (!companyId.equals(courseBase.getCompanyId())) {
+            throw new XueChengPlusException("只能删除本机构课程");
+        }
+
+        //只能删除不是已发布的课程
+        if (courseBase.getStatus().equals("203002")) {
+            throw new XueChengPlusException("该课程已发布，无法删除");
+        }
+
+        //删除课程基本信息
+        this.removeById(courseId);
+        //删除课程营销信息
+        CourseMarket courseMarket = courseMarketService.getById(courseId);
+        if (courseMarket != null) {
+            courseMarketService.removeById(courseId);
+        }
+        //删除课程教师信息
+        List<CourseTeacher> teachers = courseTeacherService.list(new LambdaQueryWrapper<CourseTeacher>()
+                .eq(CourseTeacher::getCourseId, courseId));
+        if (teachers != null) {
+            teachers.stream().forEach(teacher -> {
+                courseTeacherService.removeById(teacher.getId());
+            });
+        }
+        //删除课程预览表信息
+        CoursePublishPre publishPre = coursePublishPreService.getById(courseId);
+        if (publishPre != null) {
+            coursePublishPreService.removeById(courseId);
+        }
+        //删除课程计划
+        List<Teachplan> teachplans = teachplanService.list(new LambdaQueryWrapper<Teachplan>()
+                .eq(Teachplan::getCourseId, courseId));
+        if (teachplans != null) {
+            teachplans.stream().forEach(teachplan -> {
+                teachplanService.removeById(teachplan.getId());
+            });
+        }
+        //删除课程计划和媒资的绑定
+        List<TeachplanMedia> teachplanMedias = teachplanMediaService.list(new LambdaQueryWrapper<TeachplanMedia>()
+                .eq(TeachplanMedia::getCourseId, courseId));
+        if(teachplanMedias!=null){
+            teachplanMedias.stream().forEach(teachplanMedia -> {
+                teachplanMediaService.removeById(teachplanMedia.getId());
+            });
+        }
+
     }
 }

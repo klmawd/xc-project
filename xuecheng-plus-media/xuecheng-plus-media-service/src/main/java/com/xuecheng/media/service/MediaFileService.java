@@ -44,4 +44,6 @@ public interface MediaFileService extends IService<MediaFiles> {
     File downloadFileFromMinIO(String bucket, String objectName);
 
     boolean addMediaFilesToMinIO(String localFilePath, String mimeType, String bucket, String objectName);
+
+    void clearFile(String objectName);
 }

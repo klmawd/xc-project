@@ -16,8 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
-import javax.annotation.Resources;
 
 @Api(value = "课程基本信息接口" ,tags = "课程基本信息接口" )
 @RestController
@@ -55,5 +53,12 @@ public class CourseBaseController {
         Long companyId = 12332141425L;
         courseBaseService.updateCourse(companyId, updateCourseDto);
         return null;
+    }
+
+    //删除课程
+    @DeleteMapping("/{courseId}")
+    public void deleteCourse(@PathVariable Long courseId){
+        Long companyId = 1232141425L;
+        courseBaseService.deleteCourse(companyId , courseId);
     }
 }

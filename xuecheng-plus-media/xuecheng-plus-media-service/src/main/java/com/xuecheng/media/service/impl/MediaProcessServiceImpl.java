@@ -7,6 +7,7 @@ import com.xuecheng.media.mapper.MediaProcessMapper;
 import com.xuecheng.media.model.po.MediaFiles;
 import com.xuecheng.media.model.po.MediaProcess;
 import com.xuecheng.media.model.po.MediaProcessHistory;
+import com.xuecheng.media.service.MediaFileService;
 import com.xuecheng.media.service.MediaProcessService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ public class MediaProcessServiceImpl extends ServiceImpl<MediaProcessMapper, Med
 
     @Autowired
     MediaProcessHistoryMapper mediaProcessHistoryMapper;
+
+
 
     //查询待处理任务，shardIndex:处理器序号,shardTotal:处理器总数,count:最大任务数量
     @Override

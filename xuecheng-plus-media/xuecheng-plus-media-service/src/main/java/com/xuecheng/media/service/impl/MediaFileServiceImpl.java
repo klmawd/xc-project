@@ -21,6 +21,7 @@ import com.xuecheng.media.model.po.MediaFiles;
 import com.xuecheng.media.model.po.MediaProcess;
 import com.xuecheng.media.service.MediaDivFilesService;
 import com.xuecheng.media.service.MediaFileService;
+import com.xuecheng.media.service.MediaProcessService;
 import io.minio.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
@@ -64,6 +65,9 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFilesMapper, MediaFil
     private MediaProcessMapper mediaProcessMapper;
     @Autowired
     private MediaDivFilesService mediaDivFilesService;
+
+
+
     //存储普通文件
     @Value("${minio.bucket.files}")
     private String bucket_mediafiles;
@@ -126,6 +130,20 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFilesMapper, MediaFil
             log.error("上传文件出错,bucket:{},objectName:{},错误信息:{}", bucket, objectName, e.getMessage());
         }
         return false;
+    }
+
+
+    //从minion删除指定文件
+    @Override
+    public void clearFile(String objectName) {
+
+        try {
+            RemoveObjectArgs removeObjectArgs =
+                    new RemoveObjectArgs().builder().bucket(bucket_mediafiles).object(objectName).build();
+            minioClient.removeObject(removeObjectArgs);
+        } catch (Exception e) {
+            log.info("文件删除失败" + e.getMessage());
+        }
     }
 
     //获取文件默认存储目录路径 年/月/日

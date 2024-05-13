@@ -15,14 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Api(value = "媒资文件管理接口",tags = "媒资文件管理接口")
 @RestController
-@RequestMapping("/open")
+@RequestMapping()
 public class MediaOpenController {
 
     @Autowired
     private MediaFileService mediaFileService;
 
     @ApiOperation("预览文件")
-    @GetMapping("/preview/{mediaId}")
+    @GetMapping("/open/preview/{mediaId}")
     public RestResponse<String> getPlayUrlByMediaId(@PathVariable String mediaId){
 
         MediaFiles mediaFiles = mediaFileService.getById(mediaId);
@@ -33,6 +33,17 @@ public class MediaOpenController {
 
     }
 
+    @ApiOperation("预览文件")
+    @GetMapping("/preview/{mediaId}")
+    public RestResponse<String> getUrlByMediaId(@PathVariable String mediaId){
+
+        MediaFiles mediaFiles = mediaFileService.getById(mediaId);
+        if(mediaFiles == null || StringUtils.isEmpty(mediaFiles.getUrl())){
+            throw new XueChengPlusException("视频还没有转码处理");
+        }
+        return RestResponse.success(mediaFiles.getUrl());
+
+    }
 
 }
 

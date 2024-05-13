@@ -48,7 +48,14 @@ public class CoursePublishController {
     public void coursepublish(@PathVariable("courseId") Long courseId) {
         Long companyId = 1232141425L;
         coursePublishService.coursepublish(companyId, courseId);
+    }
 
+    @ApiOperation("课程下架")
+    @ResponseBody
+    @GetMapping("/courseoffline/{courseId}")
+    public void courseoffline(@PathVariable("courseId") Long courseId) {
+        Long companyId = 1232141425L;
+        coursePublishService.courseoffline(companyId, courseId);
     }
 
 }

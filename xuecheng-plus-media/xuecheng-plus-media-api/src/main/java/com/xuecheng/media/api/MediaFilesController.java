@@ -70,4 +70,12 @@ public class MediaFilesController {
         return uploadFileResultDto;
     }
 
+    @ApiOperation("删除文件")
+    @RequestMapping("/remove")
+    public void fileRemove(@RequestBody String fileName) {
+        String objectName = "course/" + fileName;
+        mediaFileService.clearFile(objectName);
+    }
+
+
 }

@@ -1,12 +1,15 @@
 package com.xuecheng.media.model.po;
 
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 public class MediaDivFiles implements Serializable {
+
+
     //主键id
     private int id;
     //桶

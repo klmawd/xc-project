@@ -57,7 +57,7 @@ public class MediaDivFilesServiceImpl extends ServiceImpl<MediaDivFilesMapper, M
         }
     }
 
-    //清理分块文件
+    //清理分块文件，目录下所有文件
     @Override
     public void clearChunkFiles(String chunkFileFolderPath, int chunkTotal) {
 
@@ -94,6 +94,6 @@ public class MediaDivFilesServiceImpl extends ServiceImpl<MediaDivFilesMapper, M
     //查询分开文件信息
     @Override
     public List<MediaDivFiles> getDivFile(int shardIndex, int shardTotal) {
-        return mediaDivFilesMapper.selectDivFile(shardTotal,shardIndex);
+        return mediaDivFilesMapper.selectDivFile(shardTotal, shardIndex);
     }
 }

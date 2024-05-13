@@ -18,6 +18,14 @@ public class SearchServiceClientFallbackFactory implements FallbackFactory<Searc
                 log.error("添加课程索引失败，索引信息{},熔断异常:{}", courseIndex,throwable.getMessage());
                 return false;
             }
+
+            @Override
+            public Boolean delete(Long courseId) {
+                log.error("删除课程索引失败，课程id{},熔断异常:{}", courseId,throwable.getMessage());
+                return false;
+            }
+
         };
     }
 }
+

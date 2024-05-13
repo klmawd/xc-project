@@ -1,6 +1,8 @@
 package com.xuecheng.content.jobhandler;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
+
 import com.xuecheng.base.utils.JsonUtil;
 import com.xuecheng.content.feignclient.SearchServiceClient;
 import com.xuecheng.content.model.dto.CourseIndex;
@@ -114,7 +116,7 @@ public class CoursePublishTask extends MessageProcessAbstract {
 
     //课程缓存
     private void saveCourseCache(MqMessage mqMessage) {
-
+        Long courseId = Long.valueOf(mqMessage.getBusinessKey1());
         Integer stageState3 = Integer.valueOf((mqMessage.getStageState3()));
         if (stageState3 > 0) {
             //已经处理过第三阶段任务
