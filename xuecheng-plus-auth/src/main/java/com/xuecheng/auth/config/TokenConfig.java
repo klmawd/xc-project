@@ -13,10 +13,7 @@ import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
 import java.util.Arrays;
 
-/**
- * @author Administrator
- * @version 1.0
- **/
+
 @Configuration
 public class TokenConfig {
 
@@ -34,10 +31,12 @@ public class TokenConfig {
     @Autowired
     private JwtAccessTokenConverter accessTokenConverter;
 
+    //token返回给客户端
     @Bean
     public TokenStore tokenStore() {
         return new JwtTokenStore(accessTokenConverter());
     }
+
 
     @Bean
     public JwtAccessTokenConverter accessTokenConverter() {

@@ -10,9 +10,11 @@ import com.xuecheng.content.model.dto.UpdateCourseDto;
 import com.xuecheng.content.model.po.CourseBase;
 
 import com.xuecheng.content.service.CourseBaseService;
+import com.xuecheng.content.util.SecurityUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,7 @@ public class CourseBaseController {
 
     //分页查询课程信息
     @ApiOperation("分页查询课程信息接口")
+    @PreAuthorize("hasAuthority('xc_teachmanager_course_list')")
     @PostMapping("/list")
     public PageResult<CourseBase> list(PageParams pageParams, @RequestBody(required = false) QueryCourseParamsDto queryCourseParamsDto) {
 
@@ -37,7 +40,11 @@ public class CourseBaseController {
     @PostMapping
     public CourseBaseDto addCourse(@RequestBody @Validated AddCourseDto addCourseDto) {
 
-        Long companyId = 12332141425L;
+
+        SecurityUtil.XcUser user = SecurityUtil.getUser();
+        Long companyId = Long.valueOf(user.getCompanyId());
+
+
         return courseBaseService.addCourse(companyId, addCourseDto);
     }
 

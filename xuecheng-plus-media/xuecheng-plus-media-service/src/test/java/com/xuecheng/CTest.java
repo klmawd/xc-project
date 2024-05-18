@@ -44,7 +44,6 @@ public class CTest {
     public void test1() {
 
 
-
         A sa = new A(1, "a");
         A sb = new A(1, "a");
 
@@ -88,12 +87,20 @@ public class CTest {
 
 
     @Test
-    public void test2(){
-        String a=" ";
+    public void test2() {
+        String a = " ";
         boolean blank = StringUtils.isBlank(a);
         System.out.println(blank);
-        blank=StringUtils.isEmpty(a);
+        blank = StringUtils.isEmpty(a);
         System.out.println(blank);
+    }
+
+    @Test
+    public void test3() {
+        B b = new B();
+        b.setA("abc");
+        String a = b.getA();
+        System.out.println(a);
     }
 
 }

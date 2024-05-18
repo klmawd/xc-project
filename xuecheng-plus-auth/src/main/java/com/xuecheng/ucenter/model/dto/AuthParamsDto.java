@@ -1,5 +1,6 @@
 package com.xuecheng.ucenter.model.dto;
 
+
 import lombok.Data;
 
 import java.util.HashMap;

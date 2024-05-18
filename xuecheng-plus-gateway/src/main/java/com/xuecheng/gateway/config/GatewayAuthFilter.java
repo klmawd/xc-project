@@ -53,8 +53,6 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
             log.error("加载/security-whitelist.properties出错:{}", e.getMessage());
             e.printStackTrace();
         }
-
-
     }
 
     @Autowired
@@ -91,7 +89,6 @@ public class GatewayAuthFilter implements GlobalFilter, Ordered {
             log.info("认证令牌无效: {}", token);
             return buildReturnMono("认证令牌无效", exchange);
         }
-
     }
 
     /**
