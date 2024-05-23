@@ -3,7 +3,7 @@ package com.xuecheng.content.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.xuecheng.base.ecxeption.XueChengPlusException;
+import com.xuecheng.base.exception.XueChengPlusException;
 import com.xuecheng.content.config.MultipartSupportConfig;
 import com.xuecheng.content.feignclient.MediaServiceClient;
 import com.xuecheng.content.feignclient.SearchServiceClient;
@@ -282,5 +282,12 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
         searchServiceClient.delete(courseId);
 
 
+    }
+
+    //查询课程发布
+    @Override
+    public CoursePublish getCoursePublish(Long courseId) {
+        CoursePublish coursePublish = coursePublishMapper.selectById(courseId);
+        return coursePublish;
     }
 }

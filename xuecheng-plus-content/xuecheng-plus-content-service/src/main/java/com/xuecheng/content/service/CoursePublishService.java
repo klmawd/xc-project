@@ -21,4 +21,5 @@ public interface CoursePublishService extends IService<CoursePublish> {
     File generateCourseHtml(Long courseId);
     void uploadCourseHtml(Long courseId, File file);
     void courseoffline(Long companyId, Long courseId);
+    CoursePublish getCoursePublish(Long courseId);
 }

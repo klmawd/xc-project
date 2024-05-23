@@ -1,5 +1,6 @@
 package com.xuecheng.auth.controller;
 
+import com.xuecheng.ucenter.model.dto.FindPasswordDto;
 import com.xuecheng.ucenter.model.dto.RegisterDto;
 import com.xuecheng.ucenter.service.XcUserService;
 import io.swagger.annotations.ApiOperation;
@@ -24,5 +25,11 @@ public class XcUserController {
     public void register(@RequestBody @Validated RegisterDto registerDto){
 
         xcUserService.register(registerDto);
+    }
+
+    @ApiOperation("找回密码接口")
+    @PostMapping("/findpassword")
+    public void findPassword(@RequestBody @Validated FindPasswordDto findPassword){
+        xcUserService.findPassword(findPassword);
     }
 }

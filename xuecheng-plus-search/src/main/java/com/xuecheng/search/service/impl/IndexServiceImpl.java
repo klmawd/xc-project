@@ -1,9 +1,8 @@
 package com.xuecheng.search.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.xuecheng.base.ecxeption.XueChengPlusException;
+import com.xuecheng.base.exception.XueChengPlusException;
 
-import com.xuecheng.search.po.CourseIndex;
 import com.xuecheng.search.service.IndexService;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteResponse;
@@ -17,7 +16,6 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

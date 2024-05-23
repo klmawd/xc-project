@@ -41,6 +41,7 @@ public class CourseBaseController {
     public CourseBaseDto addCourse(@RequestBody @Validated AddCourseDto addCourseDto) {
 
 
+
         SecurityUtil.XcUser user = SecurityUtil.getUser();
         Long companyId = Long.valueOf(user.getCompanyId());
 

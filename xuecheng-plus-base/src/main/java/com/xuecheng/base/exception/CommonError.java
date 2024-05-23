@@ -1,5 +1,5 @@
 
-package com.xuecheng.base.ecxeption;
+package com.xuecheng.base.exception;
 
 
 /**

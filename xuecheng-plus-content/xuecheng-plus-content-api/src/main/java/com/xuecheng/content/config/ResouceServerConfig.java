@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.R
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
+
 /**
  * @author Mr.M
  * @version 1.0
@@ -38,9 +39,10 @@ public class ResouceServerConfig extends ResourceServerConfigurerAdapter {
     public void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/r/**", "/course/**").authenticated()//所有/r/**的请求必须认证通过
+                .antMatchers("content/r/**", "/course/**").authenticated()//所有/r/**的请求必须认证通过
                 .anyRequest().permitAll()
         ;
+
     }
 
 }

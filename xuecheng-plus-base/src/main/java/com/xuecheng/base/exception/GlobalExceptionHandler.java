@@ -1,4 +1,4 @@
-package com.xuecheng.base.ecxeption;
+package com.xuecheng.base.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;

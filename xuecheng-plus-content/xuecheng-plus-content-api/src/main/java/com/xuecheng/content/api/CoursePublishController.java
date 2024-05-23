@@ -1,6 +1,7 @@
 package com.xuecheng.content.api;
 
 import com.xuecheng.content.model.dto.CoursePreviewDto;
+import com.xuecheng.content.model.po.CoursePublish;
 import com.xuecheng.content.service.CoursePublishService;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ public class CoursePublishController {
 
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.addObject("model", coursePreviewInfo);
-        modelAndView.setViewName("course_template");
+        modelAndView.setViewName("course_template~");
         return modelAndView;
 
     }
@@ -57,5 +58,16 @@ public class CoursePublishController {
         Long companyId = 1232141425L;
         coursePublishService.courseoffline(companyId, courseId);
     }
+
+    @ApiOperation("查询课程发布信息")
+    @ResponseBody
+    @GetMapping("/r/coursepublish/{courseId}")
+    public CoursePublish getCoursepublish(@PathVariable("courseId") Long courseId) {
+        CoursePublish coursePublish = coursePublishService.getCoursePublish(courseId);
+        return coursePublish;
+    }
+
+
+
 
 }

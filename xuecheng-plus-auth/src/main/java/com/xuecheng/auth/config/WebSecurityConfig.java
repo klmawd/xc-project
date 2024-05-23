@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -47,11 +48,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-      //密码为明文方式
-      //  return NoOpPasswordEncoder.getInstance();
+        //密码为明文方式
+        //  return NoOpPasswordEncoder.getInstance();
 
         //将用户输入的密码编码为BCrypt格式与数据库中的密码进行比对
-       return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder();
     }
 
     @Override
@@ -68,6 +69,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest().permitAll()//其它请求全部放行
                 .and()
                 .formLogin().successForwardUrl("/login-success");//登录成功跳转到/login-success
+        http
+                //关闭csrf
+                .csrf().disable()
+                //不通过Session获取SecurityContext
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and();
+
+        http.logout().disable();
+        //允许跨域
+        http.cors();
     }
 
 

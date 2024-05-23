@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.util.BeanUtil;
 import com.xuecheng.ucenter.mapper.XcUserMapper;
 import com.xuecheng.ucenter.mapper.XcUserRoleMapper;
+import com.xuecheng.ucenter.model.dto.FindPasswordDto;
 import com.xuecheng.ucenter.model.dto.RegisterDto;
 import com.xuecheng.ucenter.model.po.XcUser;
 import com.xuecheng.ucenter.model.po.XcUserRole;
@@ -41,13 +42,14 @@ public class XcUserServiceImpl extends ServiceImpl<XcUserMapper, XcUser> impleme
     public void register(RegisterDto registerDto) {
 
         //检验验证码是否正确
-        String key = registerDto.getCheckcodeckey();
+        String cellphone = registerDto.getCellphone();
         String code = registerDto.getCheckcode();
         ValueOperations opsForValue = redisTemplate.opsForValue();
-        String checkCode = (String) opsForValue.get(key);
+        String checkCode = (String) opsForValue.get(cellphone);
         if (!code.equals(checkCode)) {
             throw new RuntimeException("验证码错误");
         }
+        redisTemplate.delete(cellphone);
 
         //检验密码
         String passWord = registerDto.getPassword();
@@ -81,5 +83,37 @@ public class XcUserServiceImpl extends ServiceImpl<XcUserMapper, XcUser> impleme
         xcUserRoleMapper.insert(xcUserRole);
 
 
+    }
+
+    //找回密码
+    @Override
+    public void findPassword(FindPasswordDto findPassword) {
+
+        //检验验证码是否正确
+        String cellphone = findPassword.getCellphone();
+        String code = findPassword.getCheckcode();
+        ValueOperations opsForValue = redisTemplate.opsForValue();
+        String checkCode = (String) opsForValue.get(cellphone);
+        if (!code.equals(checkCode)) {
+            throw new RuntimeException("验证码错误");
+        }
+        redisTemplate.delete(cellphone);
+
+        //检验密码
+        String passWord = findPassword.getPassword();
+        if (!passWord.equals(findPassword.getConfirmpwd())) {
+            throw new RuntimeException("两次输入的密码不一致");
+        }
+
+        //检验用户是否存在
+        XcUser xcUser = xcUserMapper.selectOne(new LambdaQueryWrapper<XcUser>()
+                .eq(XcUser::getCellphone, cellphone));
+        if (xcUser == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        //修改密码
+        xcUser.setPassword(passwordEncoder.encode(passWord));
+        xcUserMapper.updateById(xcUser);
     }
 }
