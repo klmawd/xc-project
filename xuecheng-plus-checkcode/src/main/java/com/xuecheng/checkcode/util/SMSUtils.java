@@ -28,7 +28,8 @@ public class SMSUtils {
     @Value("${aliyun.sign_name}")
     public static String SIGN_NAME;
     @Value("${aliyun.template_code}")
-    public static  String TEMPLATE_CODE;
+    public static String TEMPLATE_CODE;
+
     public static void sendMessage(String signName, String templateCode, String phoneNumbers, String param) {
         DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", accessKeyId, secret);
         IAcsClient client = new DefaultAcsClient(profile);
