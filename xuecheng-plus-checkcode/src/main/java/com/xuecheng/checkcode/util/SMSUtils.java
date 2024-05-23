@@ -6,6 +6,7 @@ import com.aliyuncs.dysmsapi.model.v20170525.SendSmsRequest;
 import com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.profile.DefaultProfile;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * 短信发送工具类
@@ -20,11 +21,15 @@ public class SMSUtils {
      * @param phoneNumbers 手机号
      * @param param 参数
      */
+    @Value("${aliyun.accessKeyId}")
+    private static String accessKeyId;
+    @Value("${aliyun.secret}")
+    private static String secret;
 
     public static final String SIGN_NAME = "瑞吉外卖";
     public static final String TEMPLATE_CODE = "SMS_465369457";
     public static void sendMessage(String signName, String templateCode, String phoneNumbers, String param) {
-        DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", "LTAI5tLfniKVJSaBMxyECRgt", "H2pe9ww4VIrsbpWD9u6jkIGdf62vBu");
+        DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", accessKeyId, secret);
         IAcsClient client = new DefaultAcsClient(profile);
 
         SendSmsRequest request = new SendSmsRequest();
