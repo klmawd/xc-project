@@ -16,6 +16,8 @@ public class PhoneCodeServiceImpl implements PhoneCodeService {
     RedisCheckCodeStore redisCheckCodeStore;
     @Autowired
     NumberLetterCheckCodeGenerator numberLetterCheckCodeGenerator;
+    @Autowired
+    SMSUtils smsUtils;
 
 
     //发送短信验证码
@@ -25,7 +27,7 @@ public class PhoneCodeServiceImpl implements PhoneCodeService {
         String code = numberLetterCheckCodeGenerator.generate(4);
         log.info("code:{}", code);
 
-       // SMSUtils.sendMessage(SMSUtils.SIGN_NAME, SMSUtils.TEMPLATE_CODE, phoneNumber, code);
+        smsUtils.sendMessage(smsUtils.SIGN_NAME, smsUtils.TEMPLATE_CODE, phoneNumber, code);
 
         //将手机号和验证码存redis
         redisCheckCodeStore.set(phoneNumber, code, 1 * 60);

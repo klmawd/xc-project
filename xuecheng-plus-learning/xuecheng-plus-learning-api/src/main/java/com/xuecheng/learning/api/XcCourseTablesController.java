@@ -47,7 +47,6 @@ public class XcCourseTablesController {
         SecurityUtil.XcUser user = SecurityUtil.getUser();
         XcCourseTablesDto xcCourseTablesDto = xcCourseTablesService.getLearnstatus(user.getId(), courseId);
         return xcCourseTablesDto;
-
     }
 
     @ApiOperation("我的课程表")

@@ -30,7 +30,6 @@ public class MediaOpenController {
             throw new XueChengPlusException("视频还没有转码处理");
         }
         return RestResponse.success(mediaFiles.getUrl());
-
     }
 
     @ApiOperation("预览文件")

@@ -14,6 +14,7 @@ import com.xuecheng.learning.model.dto.XcCourseTablesDto;
 import com.xuecheng.learning.model.po.XcChooseCourse;
 import com.xuecheng.learning.model.po.XcCourseTables;
 import com.xuecheng.learning.service.XcCourseTablesService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 
 
 @Service
+@Slf4j
 public class XcCourseTablesServiceImpl extends ServiceImpl<XcCourseTablesMapper, XcCourseTables> implements XcCourseTablesService {
 
     @Autowired
@@ -58,14 +60,16 @@ public class XcCourseTablesServiceImpl extends ServiceImpl<XcCourseTablesMapper,
         xcChooseCourseDto.setValidtimeStart(LocalDateTime.now());//有效期开始时间
         xcChooseCourseDto.setValidtimeEnd(LocalDateTime.now().plusDays(courseMarket.getValidDays()));//有效期结束时间
 
+        XcChooseCourse chooseCourse = new XcChooseCourse();
         if (courseMarket.getCharge().equals("201000")) {
 
             xcChooseCourseDto.setOrderType("700001");//免费课程
             xcChooseCourseDto.setLearnStatus("702001");//学习状态设为正常学习
+            xcChooseCourseDto.setStatus("701001");//选课状态为成功
 
 
             //向选课记录表xc_choose_course添加记录
-            XcChooseCourse chooseCourse = insertChooseCourse(xcChooseCourseDto);
+            chooseCourse = insertChooseCourse(xcChooseCourseDto);
 
             //向我的课程表xc_course_tables添加记录
             insertCourseTables(chooseCourse);
@@ -73,14 +77,14 @@ public class XcCourseTablesServiceImpl extends ServiceImpl<XcCourseTablesMapper,
 
             xcChooseCourseDto.setOrderType("700002");//收费课程
             xcChooseCourseDto.setLearnStatus("702002"); //学习状态设为选课后没有支付
+            xcChooseCourseDto.setStatus("701002");//选课状态未支付
 
             //向选课记录表xc_choose_course添加记录
-            insertChooseCourse(xcChooseCourseDto);
-
-            //todo:通知支付
+            chooseCourse = insertChooseCourse(xcChooseCourseDto);
 
         }
 
+        BeanUtils.copyProperties(chooseCourse, xcChooseCourseDto);
         return xcChooseCourseDto;
     }
 
@@ -112,6 +116,33 @@ public class XcCourseTablesServiceImpl extends ServiceImpl<XcCourseTablesMapper,
         return xcCourseTablesDto;
     }
 
+    //保存选课成功状态
+    @Override
+    @Transactional
+    public boolean saveChooseCourseStatus(String chooseCourseId) {
+
+        XcChooseCourse xcChooseCourse = xcChooseCourseMapper.selectById(chooseCourseId);
+        if (xcChooseCourse == null) {
+            log.debug("选课id:{}.不存在对应的选课记录{}", chooseCourseId);
+            return false;
+        }
+
+
+        //更新选课状态
+        xcChooseCourse.setStatus("701001");//选课状态设为选课成功
+        int i = xcChooseCourseMapper.updateById(xcChooseCourse);
+        if (i <= 0) {
+            log.error("更新选课状态失败:{}", xcChooseCourse);
+            throw new XueChengPlusException("更新选课状态失败");
+        }
+
+        //在我的课程表添加记录
+        insertCourseTables(xcChooseCourse);
+        return true;
+
+
+    }
+
     //向选课记录表xc_choose_course添加记录
     private XcChooseCourse insertChooseCourse(XcChooseCourseDto xcChooseCourseDto) {
 
@@ -127,6 +158,7 @@ public class XcCourseTablesServiceImpl extends ServiceImpl<XcCourseTablesMapper,
         //添加
         xcChooseCourse = new XcChooseCourse();
         BeanUtils.copyProperties(xcChooseCourseDto, xcChooseCourse);
+
         xcChooseCourseMapper.insert(xcChooseCourse);
         return xcChooseCourse;
     }
