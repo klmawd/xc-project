@@ -56,6 +56,27 @@ public class IndexServiceImpl implements IndexService {
     }
 
     @Override
+    public Boolean addIndex(String indexName, String id, Object object) {
+
+        IndexRequest request = new IndexRequest(indexName).id(id);
+        String jsonString = JSON.toJSONString(object);
+        request.source(jsonString, XContentType.JSON);
+        IndexResponse indexResponse = null;
+
+        try {
+            indexResponse = client.index(request, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            log.error("添加索引出错:{}", e.getMessage());
+            e.printStackTrace();
+            XueChengPlusException.cast("添加索引出错");
+        }
+
+        String name = indexResponse.getResult().name();
+        return name.equalsIgnoreCase("created") || name.equalsIgnoreCase("updated");
+    }
+
+
+    @Override
     public Boolean updateCourseIndex(String indexName, String id, Object object) {
 
         String jsonString = JSON.toJSONString(object);
@@ -71,6 +92,25 @@ public class IndexServiceImpl implements IndexService {
         }
         DocWriteResponse.Result result = updateResponse.getResult();
         return result.name().equalsIgnoreCase("updated");
+
+    }
+
+    public Boolean updateIndex(String indexName, String id, Object object) {
+
+        String jsonString = JSON.toJSONString(object);
+        UpdateRequest updateRequest = new UpdateRequest(indexName, id).doc(jsonString, XContentType.JSON);
+        UpdateResponse updateResponse = null;
+
+        try {
+            updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            log.error("更新索引出错:{}", e.getMessage());
+            e.printStackTrace();
+            XueChengPlusException.cast("更新索引出错");
+        }
+
+        String name = updateResponse.getResult().name();
+        return name.equalsIgnoreCase("updated");
 
     }
 

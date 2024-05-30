@@ -1,9 +1,11 @@
 package com.xuecheng.content.jobhandler;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 
 import com.xuecheng.base.utils.JsonUtil;
+import com.xuecheng.content.config.CoursePublishConfig;
 import com.xuecheng.content.feignclient.SearchServiceClient;
 import com.xuecheng.content.model.dto.CourseIndex;
 import com.xuecheng.content.model.po.CourseMarket;
@@ -16,8 +18,11 @@ import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -32,6 +37,9 @@ public class CoursePublishTask extends MessageProcessAbstract {
     private CoursePublishService coursePublishService;
     @Autowired
     private SearchServiceClient searchServiceClient;
+    @Autowired
+    RedisTemplate redisTemplate;
+
 
     //任务调度入口
     @XxlJob("CoursePublishJobHandler")
@@ -43,8 +51,37 @@ public class CoursePublishTask extends MessageProcessAbstract {
 
         //参数:分片序号、分片总数、消息类型、一次最多取到的任务数量、一次任务调度执行的超时时间
         process(shardIndex, shardTotal, "course_publish", 30, 60);
+    }
 
+    //监听课程发布队列
+    @RabbitListener(queues = CoursePublishConfig.COURSEPUBLISH_QUEUE)
+    public void receive(Message message) {
 
+        //消息对象
+        Long mqMessageId = JSON.parseObject(message.getBody(), Long.class);
+        MqMessage mqMessage = mqMessageService.getById(mqMessageId);
+
+        if (mqMessage != null) {
+            //消息类型
+            String messageType = mqMessage.getMessageType();
+            if (messageType.equals("course_publish")) {
+
+                try {
+                    //课程静态化
+                    generateCourseHtml(mqMessage);
+
+                    //课程索引
+                    saveCourseIndex(mqMessage);
+
+                    //课程缓存
+                    saveCourseCache(mqMessage);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    mqMessageService.updateById(mqMessage);
+                }
+            }
+        }
     }
 
 
@@ -64,7 +101,6 @@ public class CoursePublishTask extends MessageProcessAbstract {
         } finally {
             mqMessageService.updateById(mqMessage);
         }
-
         return true;
     }
 
@@ -103,7 +139,7 @@ public class CoursePublishTask extends MessageProcessAbstract {
 
         //课程营销信息
         String courseMarketJson = coursePublish.getMarket();
-        if(StringUtils.isNotEmpty(courseMarketJson)){
+        if (StringUtils.isNotEmpty(courseMarketJson)) {
             CourseMarket courseMarket = JsonUtil.jsonToObject(courseMarketJson, CourseMarket.class);
             BeanUtils.copyProperties(courseMarket, courseIndex);
         }
@@ -122,6 +158,9 @@ public class CoursePublishTask extends MessageProcessAbstract {
             //已经处理过第三阶段任务
             return;
         }
+        CoursePublish coursePublish = coursePublishService.getCoursePublish(courseId);
+        String coursePublishJson = JSON.toJSONString(coursePublish);
+        redisTemplate.opsForValue().set("course:" + courseId, coursePublishJson);
 
         //第三阶段任务完成
         mqMessage.setStageState1("1");

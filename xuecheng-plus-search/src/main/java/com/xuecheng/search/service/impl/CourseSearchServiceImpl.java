@@ -26,6 +26,9 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -63,7 +66,7 @@ public class CourseSearchServiceImpl implements CourseSearchService {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         //source源字段过虑
         String[] sourceFieldsArray = sourceFields.split(",");
-        searchSourceBuilder.fetchSource(sourceFieldsArray, new String[]{});
+        searchSourceBuilder.fetchSource(sourceFieldsArray, new String[]{});//参数：返回结果包含的字段，返回结果不包含的字段
         if (courseSearchParam == null) {
             courseSearchParam = new SearchCourseParamDto();
         }
@@ -102,6 +105,18 @@ public class CourseSearchServiceImpl implements CourseSearchService {
         //设置高亮字段
         highlightBuilder.fields().add(new HighlightBuilder.Field("name"));
         searchSourceBuilder.highlighter(highlightBuilder);
+        //按价格排序
+        Integer sortType = courseSearchParam.getSortType();
+        if (sortType != null) {
+            if (sortType == 1) {
+                //升序
+                searchSourceBuilder.sort(SortBuilders.fieldSort("price").order(SortOrder.ASC));
+            }
+            if (sortType == 2) {
+                //降序
+                searchSourceBuilder.sort(SortBuilders.fieldSort("price").order(SortOrder.DESC));
+            }
+        }
         //请求搜索
         searchRequest.source(searchSourceBuilder);
         //聚合设置
@@ -129,7 +144,7 @@ public class CourseSearchServiceImpl implements CourseSearchService {
             CourseIndex courseIndex = JSON.parseObject(sourceAsString, CourseIndex.class);
 
             //取出source
-            Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+            //Map<String, Object> sourceAsMap = hit.getSourceAsMap();
 
             //课程id
             Long id = courseIndex.getId();
@@ -149,11 +164,9 @@ public class CourseSearchServiceImpl implements CourseSearchService {
 
                 }
             }
-            courseIndex.setId(id);
+//            courseIndex.setId(id);
             courseIndex.setName(name);
-
             list.add(courseIndex);
-
         }
         SearchPageResultDto<CourseIndex> pageResult = new SearchPageResultDto<>(list, totalHits.value, pageNo, pageSize);
 
@@ -179,7 +192,6 @@ public class CourseSearchServiceImpl implements CourseSearchService {
                 .field("stName")
                 .size(100)
         );
-
     }
 
     private List<String> getAggregation(Aggregations aggregations, String aggName) {

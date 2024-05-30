@@ -51,7 +51,7 @@ public abstract class MessageProcessAbstract {
             //任务个数
             int size = messageList.size();
             log.debug("取出待处理消息" + size + "条");
-            if (size <= 0) {
+            if (size == 0) {
                 return;
             }
 

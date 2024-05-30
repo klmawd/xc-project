@@ -30,6 +30,7 @@ public class CoursePublishController {
     @Autowired
     private CoursePublishService coursePublishService;
 
+
     @ApiOperation("课程预览")
     @GetMapping("/coursepreview/{courseId}")
     public ModelAndView preview(@PathVariable("courseId") Long courseId) {
@@ -40,7 +41,6 @@ public class CoursePublishController {
         modelAndView.addObject("model", coursePreviewInfo);
         modelAndView.setViewName("course_template~");
         return modelAndView;
-
     }
 
     @ApiOperation("提交审核")
@@ -79,8 +79,9 @@ public class CoursePublishController {
     @GetMapping("/course/whole/{courseId}")
     public CoursePreviewDto getCoursePublish(@PathVariable("courseId") Long courseId) {
 
+
         CoursePreviewDto coursePreviewDto = new CoursePreviewDto();
-        CoursePublish coursePublish = coursePublishService.getCoursePublish(courseId);
+        CoursePublish coursePublish = coursePublishService.getCoursePublishCache(courseId);
         if (coursePublish == null) {
             return coursePreviewDto;
         }

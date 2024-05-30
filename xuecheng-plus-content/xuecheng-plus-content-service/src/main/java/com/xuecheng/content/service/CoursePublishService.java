@@ -16,10 +16,19 @@ import java.io.File;
  */
 public interface CoursePublishService extends IService<CoursePublish> {
     CoursePreviewDto getCoursePreviewInfo(Long courseId);
+
     void commitAudit(Long companyId, Long courseId);
+
     void coursepublish(Long companyId, Long courserId);
+
     File generateCourseHtml(Long courseId);
+
     void uploadCourseHtml(Long courseId, File file);
+
     void courseoffline(Long companyId, Long courseId);
+
     CoursePublish getCoursePublish(Long courseId);
+
+    //从缓存查询课程信息
+    CoursePublish getCoursePublishCache(Long courseId);
 }

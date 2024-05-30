@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xuecheng.base.exception.XueChengPlusException;
+import com.xuecheng.base.utils.StringUtil;
+import com.xuecheng.content.config.CoursePublishConfig;
 import com.xuecheng.content.config.MultipartSupportConfig;
 import com.xuecheng.content.feignclient.MediaServiceClient;
 import com.xuecheng.content.feignclient.SearchServiceClient;
@@ -13,27 +15,40 @@ import com.xuecheng.content.model.dto.CoursePreviewDto;
 import com.xuecheng.content.model.dto.TeachplanDto;
 import com.xuecheng.content.model.po.*;
 import com.xuecheng.content.service.*;
+import com.xuecheng.messagesdk.model.po.MqMessage;
 import com.xuecheng.messagesdk.service.MqMessageService;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -68,6 +83,12 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
     private MediaServiceClient mediaServiceClient;
     @Autowired
     private SearchServiceClient searchServiceClient;
+    @Autowired
+    RedisTemplate redisTemplate;
+    @Autowired
+    RabbitTemplate rabbitTemplate;
+    @Autowired
+    TransactionTemplate transactionTemplate;
 
     //课程预览
     @Override
@@ -159,7 +180,7 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
 
     //课程发布
     @Override
-    @Transactional
+   // @Transactional
     public void coursepublish(Long companyId, Long courseId) {
 
         CoursePublishPre publishPre = coursePublishPreService.getById(courseId);
@@ -177,26 +198,74 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
         coursePublish.setCreateDate(LocalDateTime.now());
         coursePublish.setOnlineDate(LocalDateTime.now());
         coursePublish.setStatus("202004");
-        //向course_publish表插入数据
-        if (coursePublishService.getById(courseId) != null) {
-            coursePublishService.updateById(coursePublish);
-        } else {
-            coursePublishService.save(coursePublish);
-        }
+
+
+        MqMessage mqMessage = transactionTemplate.execute(new TransactionCallback<MqMessage>() {
+            @Override
+            public MqMessage doInTransaction(TransactionStatus transactionStatus) {
+                try {
+                    //向course_publish表插入数据
+                    if (coursePublishService.getById(courseId) != null) {
+                        coursePublishService.updateById(coursePublish);
+                    } else {
+                        coursePublishService.save(coursePublish);
+                    }
 
 //        //删除course_publish_pre表数据
 //        coursePublishPreService.removeById(courseId);
 
-        //将course_base表中相关记录的发布状态改为已发布
-        CourseBase courseBase = courseBaseService.getById(courseId);
-        courseBase.setStatus("203002");
-        courseBaseService.updateById(courseBase);
+                    //将course_base表中相关记录的发布状态改为已发布
+                    CourseBase courseBase = courseBaseService.getById(courseId);
+                    courseBase.setStatus("203002");
+                    courseBaseService.updateById(courseBase);
 
-        //向mq_message表插入数据
-        mqMessageService.addMessage("course_publish", String.valueOf(courseId), null, null);
+                    //向mq_message表插入数据
+                    MqMessage mqMessage = mqMessageService.addMessage("course_publish", String.valueOf(courseId), null, null);
+                    return mqMessage;
+                } catch (Exception e) {
+                    transactionStatus.setRollbackOnly();
+                    return null;
+                }
+            }
+        });
 
+
+        //通知课程已发布
+        notifyCoursePublish(mqMessage.getId());
 
     }
+
+    //通知课程已发布
+    public void notifyCoursePublish(Long mqMessageId) {
+
+        //1、消息体，转json
+        String msg = JSON.toJSONString(mqMessageId);
+        //设置消息持久化
+        Message msgObj = MessageBuilder.withBody(msg.getBytes(StandardCharsets.UTF_8))
+                .setDeliveryMode(MessageDeliveryMode.PERSISTENT)
+                .build();
+        // 2.全局唯一的消息ID，需要封装到CorrelationData中
+        CorrelationData correlationData = new CorrelationData(mqMessageId.toString());
+        // 3.添加callback,
+        correlationData.getFuture().addCallback(
+                result -> {
+                    if (result.isAck()) {
+                        // 3.1.ack，消息成功
+                        log.debug("课程发布消息发送成功, ID:{}", correlationData.getId());
+                        //删除消息表中的记录
+                        mqMessageService.completed(mqMessageId);
+                    } else {
+                        // 3.2.nack，消息失败
+                        log.error("课程发布消息发送失败, ID:{}, 原因{}", correlationData.getId(), result.getReason());
+                    }
+                },
+                ex -> log.error("消息发送异常, ID:{}, 原因{}", correlationData.getId(), ex.getMessage())
+        );
+
+        //发送消息
+        rabbitTemplate.convertAndSend(CoursePublishConfig.COURSEPUBLISH_EXCHANGE_FANOUT, CoursePublishConfig.COURSEPUBLISH_QUEUE, msgObj, correlationData);
+    }
+
 
     //生成课程预览静态页面
     @Override
@@ -275,19 +344,52 @@ public class CoursePublishServiceImpl extends ServiceImpl<CoursePublishMapper, C
         //删除课程发布表数据
         coursePublishService.removeById(courseId);
 
+        //删除redis中缓存的数据
+        redisTemplate.delete("course:" + courseId);
+
         //删除minio中静态页面
         mediaServiceClient.fileRemove(courseId + ".html");
 
         //删除es中索引信息
         searchServiceClient.delete(courseId);
-
-
     }
 
     //查询课程发布
     @Override
     public CoursePublish getCoursePublish(Long courseId) {
         CoursePublish coursePublish = coursePublishMapper.selectById(courseId);
+        return coursePublish;
+    }
+
+    //从缓存查询课程信息
+    @Override
+    public CoursePublish getCoursePublishCache(Long courseId) {
+
+        String coursePublishJson = (String) redisTemplate.opsForValue().get("course:" + courseId);
+        if (!StringUtil.isEmpty(coursePublishJson)) {
+            //redis存在
+            return JSON.parseObject(coursePublishJson, CoursePublish.class);
+        }
+        CoursePublish coursePublish;
+
+        //从数据库查
+        synchronized (this) {
+            coursePublishJson = (String) redisTemplate.opsForValue().get("course:" + courseId);
+            if (!StringUtil.isEmpty(coursePublishJson)) {
+                //redis存在
+                return JSON.parseObject(coursePublishJson, CoursePublish.class);
+            }
+
+            //从数据库查
+            coursePublish = getCoursePublish(courseId);
+            if (coursePublish != null) {
+                coursePublishJson = JSON.toJSONString(coursePublish);
+                redisTemplate.opsForValue().set("course:" + courseId, coursePublishJson, 10L + new Random().nextInt(5), TimeUnit.MINUTES);
+            } else {
+                //数据库不存在，缓存"null":缓存穿透问题
+                redisTemplate.opsForValue().set("course:" + courseId, "null", 1L, TimeUnit.MINUTES);
+            }
+        }
         return coursePublish;
     }
 }
